@@ -1,0 +1,255 @@
+%{
+url_config =  INSERT_CONFIG_PLACE_DO_NOT_CHANGE_IT
+}%
+%{
+def generator_oc_m_var_code(var_name, path):
+    var_config = dict()
+    var_config["name"] = var_name
+    var_config["path"] = path
+    return var_config
+}%
+%{
+def code_var_factory(params, code_arr):
+    if not params:
+        return
+    if 'path' in params:
+        var_name = ""
+        var_value = params['path']
+        if 'name' in params:
+            var_name = params["name"]
+        else:
+            components = var_value.split('/')
+            if len(components) <= 3:
+                components = components[1:]
+            else:
+                components = components[2:]
+            for cc in components:
+                var_name += cc
+        insert_code = generator_oc_m_var_code(var_name, var_value)
+        if insert_code not in code_arr:
+            code_arr.append(insert_code)
+    for item in params:
+        if item == 'name' or item == "path" or item == "bodyParameter" or item == "host_type":
+            continue
+        code_var_factory(params[item], code_arr)
+}%
+% h_method = dict()
+% h_var_list = dict()
+%{
+  def get_host_type(host):
+    if host == "api":
+        return "apiRequestWithResponseClass"
+    elif host == "log":
+        return 'logRequestWithResponseClass'
+    elif host == "upload":
+        return 'uploadRequestWithResponseClass'
+    elif host == "pay":
+        return "payRequestWithResponseClass"
+    elif host == "payGateway":
+        return "payGatewayRequestWithResponseClass"
+    elif host == "https":
+        return  "httpsRequestWithResponseClass"
+    elif host == "live":
+        return "liveRequestWithResponseClass"
+    elif host == "IM":
+        return "IMRequestWithResponseClass"
+    elif host == "push":
+        return "pushRequestWithResponseClass"
+    elif host == "festival":
+        return "festivalRequestWithResponseClass"
+    elif host == "festivalPay":
+        return "festivalPayRequestWithResponseClass"
+    else:
+        return "apiRequestWithResponseClass"
+
+}%
+%{
+def code_list_methods_factory(method_list, imp_part):
+    for params in method_list:
+        if 'path' in params:
+            if 'name' in params:
+                path_name = params["name"]
+            request_method = 'KSUPOSTHTTPRequest'
+            if 'http_method' in params:
+                request_method = params['http_method']
+
+            body_parameter = dict()
+            if not request_method == 'KSUPOSTHTTPRequest':
+                body_parameter = params['parameter']
+            else:
+                if 'bodyParameter' in params:
+                    body_parameter = params['bodyParameter']
+
+            host_type = "apiRequestWithResponseClass"
+            host_type_prefix = 'api_'
+            if "host_type" in params:
+                host_type = get_host_type(params["host_type"])
+                host_type_prefix = params["host_type"]+ "_"
+
+            remark = ''
+            if 'remark' in params:
+                remark = params['remark']
+            optionalVar = dict()
+            if "optionalVar" in params:
+                optionalVar = params["optionalVar"]
+
+            if "isMultipartForm" in params:
+                if params["isMultipartForm"] == 'true':
+                    request_method = 'KSUMultipartFormHTTPRequest'
+
+            imp = dict()
+            imp['path_name'] = path_name
+            imp['body_parameter'] = body_parameter
+            imp['host_type'] = host_type
+            imp['host_type_prefix'] = host_type_prefix
+            imp['request_method'] = request_method
+            imp['optionalVar'] = optionalVar
+            imp['remark'] = remark
+            imp_part.append(imp)
+
+
+}%
+
+% for file_name in url_config:
+% import time
+//
+//  KSOAPIRequestManager+${file_name}.m
+//  gif
+//  由脚本自动生成，修改无效，请编辑配置文件
+//  Created by Demo.m.gyb.
+//  Copyright ${time.strftime("%Y", time.localtime())} kuaishou. All rights reserved.
+//
+
+#import "KSOAPIRequestManager+${file_name}.h"
+#pragma mark --- URL Paths
+    % code_config = url_config[file_name]
+    % path_arr = []
+    % if file_name not in h_var_list:
+    %    h_var_list[file_name] = []
+    % path_arr = code_config
+    % for config in path_arr:
+        % var_code_path = config["path"]
+        % var_code_name = config["name"]
+NSString *const ${var_code_name} = @"${var_code_path}";
+        % if 'var_show_in_h' in config and config['var_show_in_h'] == 'true':
+            % h_var_list[file_name].append('extern NSString *const '+var_code_name)
+        % end
+    % end
+
+@implementation KSOAPIRequestManager (${file_name})
+    % methods_arr = []
+    % code_list_methods_factory(code_config,methods_arr)
+    % for method in methods_arr:
+        % request_method = method['request_method']
+        % path_name = method['path_name']
+        % host_type = method['host_type']
+        % body_parameter = method['body_parameter']
+        % host_type_prefix = method['host_type_prefix']
+        % optional_var = dict()
+        % optional_var = method['optionalVar']
+        % method_prefix = path_name[3:-7]
+        % method_prefix = method_prefix[0].lower() + method_prefix[1:]
+        % method_prefix = host_type_prefix + method_prefix
+        % use_params = len(body_parameter.keys()) + len(optional_var.keys()) <= 4
+        % parameter_str = ''
+        % if use_params:
+        %   if not len(body_parameter.keys()) + len(optional_var.keys()) == 0:
+        %       pre_white_space = len('- ('+request_method+'*)'+method_prefix+'Request')
+        %       for item in body_parameter:
+        %           var_class = body_parameter[item]
+        %           insert_line = item +':('+var_class+ '*)'+item+' '
+        %           space = (pre_white_space-len(item)) * ' '
+        %           parameter_str += '\n'+ space + insert_line
+        %       end
+        %       for item in optional_var:
+        %          var_class = optional_var[item]
+        %          insert_line = item +':(nullable '+var_class+ '*)'+item+' '
+        %          space = (pre_white_space-len(item)) * ' '
+        %          parameter_str += '\n'+ space + insert_line
+        %       end
+        %   end
+        % else:
+        %   parameter_str = 'parameter:(NSDictionary *)parameter'+' '
+        %   end
+        %  if len(parameter_str) >2 :
+        %    method_name = '- ('+request_method+'*)'+method_prefix+'Request:(nullable Class)Class ' +parameter_str[0:-1]+';\n'
+        %  else:
+        %    method_name = '- ('+request_method+'*)'+method_prefix+'Request:(nullable Class)Class;\n'
+        %  end
+        %  if file_name not in h_method:
+        %       h_method[file_name] = []
+        %  remark = method['remark']
+        %  if remark:
+        %     remark = '/**\n' + remark + '\n*/'
+        %  if len(body_parameter.keys()) + len(optional_var.keys()) > 4:
+        %       # 大于四个的情况要加remark
+        %     if remark :
+        %       des = remark[:-2]
+        %     else:
+        %       des = '/**\n'
+        %end
+        %     for item in body_parameter:
+        %        var_class = body_parameter[item]
+        %        des += '@param '+item +' '+ var_class +'\n'
+        %end
+        %     for item in optional_var:
+        %        var_class = optional_var[item]
+        %        des += '@param '+item +' '+ var_class +'\n'
+        %end
+        %     des +=  '*/'
+        %     remark = des
+        % end 
+        %  if remark:
+        %     method_name =  remark + '\n' +method_name
+        %  h_method[file_name].append(method_name)
+- (${request_method}*)${method_prefix}Request:(nullable Class)Class ${parameter_str}{
+% if not len(body_parameter.keys()) + len(optional_var.keys()) == 0:
+%end
+% if use_params:
+%  if not len(body_parameter.keys()) + len(optional_var.keys()) == 0:
+   NSMutableDictionary *bodyParameter = [NSMutableDictionary dictionary];
+%end
+%  for item in body_parameter:
+%    var_class = body_parameter[item]
+   NSAssert(${item}, @"${item} is empty");
+   if (!KSSAFE_CAST(${item},${var_class})) {
+       % if 'NSNumber' in var_class:
+      ${item} = @(0);
+       % else:
+      ${item} =@"";
+ %end
+      DDLogError(@"request: %@ parameter ${item} can't be null",${path_name});
+   }
+   bodyParameter[@"${item}"] = ${item};
+
+   % end
+     % for item in optional_var:
+   if (KSSAFE_CAST(${item},${optional_var[item]})) {
+       bodyParameter[@"${item}"] = ${item};
+   }
+    % end
+%end
+   ${request_method} *request = [${request_method} ${host_type}:Class];
+   request.path = ${path_name};
+% if not len(body_parameter.keys()) + len(optional_var.keys()) == 0:
+   % if use_params:
+   request.bodyParameter = bodyParameter;
+   % else:
+   request.bodyParameter = parameter;
+   %end
+%end
+   return request;
+}
+
+    % end
+% end
+%{
+  import json
+  with open('./h_methods.json','a') as f:
+     h_data = {}
+     h_data["method_list"] = h_method
+     h_data["var_list"] = h_var_list
+     f.write(json.dumps(h_data)+'\n')  
+}%
+
+@end

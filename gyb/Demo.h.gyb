@@ -1,0 +1,32 @@
+%{
+url_config =  INSERT_CONFIG_PLACE_DO_NOT_CHANGE_IT
+var_config = url_config['var_list']
+url_config = url_config['method_list']
+
+}%
+% for file_name in url_config:
+% import time
+//
+//  KSOAPIRequestManager+${file_name}.h
+//  gif
+//  由脚本自动生成，修改无效，请编辑配置文件
+//  Created by Demo.h.gyb.
+//  Copyright ${time.strftime("%Y", time.localtime())} kuaishou. All rights reserved.
+//
+
+#import "KSOAPIRequestManager.h"
+%for file_name in var_config:
+    % for item in var_config[file_name]:
+${item};
+    %end
+%end
+
+NS_ASSUME_NONNULL_BEGIN
+@interface KSOAPIRequestManager (${file_name})
+% key = list(url_config.keys())[0]
+% config = url_config[key]
+%for item in config:
+${item}
+%end
+@end
+NS_ASSUME_NONNULL_END
