@@ -8,5 +8,8 @@
  
 ## ScanFile
 递归查找文件
+
+## refactor_image_name
+将下划线的命名方式改完驼峰命名方式例如tips_new_view 改为 tipsNewView
  
 
