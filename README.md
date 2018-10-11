@@ -9,7 +9,8 @@
 ## ScanFile
 递归查找文件
 
-## refactor_image_name
+## rename_tuofeng
 将下划线的命名方式改完驼峰命名方式例如tips_new_view 改为 tipsNewView
  
-
+## refactor_image_name
+运用了ScanFile，rename_tuofeng。来查找iOS项目的文件然后生成oc版的图片代码。将图片资源化。oc版本的图片资源化
