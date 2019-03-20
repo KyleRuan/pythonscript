@@ -14,3 +14,8 @@
  
 ## refactor_image_name
 运用了ScanFile，rename_tuofeng。来查找iOS项目的文件然后生成oc版的图片代码。将图片资源化。oc版本的图片资源化
+## imageOC
+三个脚本实现整套OC 版图片的RSwift版本
+1. ATImageProduction.py 加到build phrase 加个脚本
+2. 用ATImageProduction.py 替换现有工程中所有的实现
+3. 最后使用insert_import.py 插入替换工程的头文件
